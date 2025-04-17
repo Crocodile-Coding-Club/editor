@@ -1,0 +1,12 @@
+Touches:
+
+Z/Q/S/D : Se déplacer de Chunk
+Flèche du Haut: Sauvegarder la Map
+Flèche de Droite/Gauche: Changer de Pages pour les différentes textures
+
+Boutons:
+
+Collision: Indiquesi la Tile possède une collision ou non
+Entity: Indique si la Tile est une entitée ou non
+Layer: Couche de la Tile (Pour pouvoir mettre une Tile par dessus l'autre)
+Colkey: Couleur transparente de la texture dans le système R, G, B (Exemple: 255, 255, 255 ---> Blanc)
