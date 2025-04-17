@@ -75,6 +75,77 @@ class InputBoxNum:
         txt_surface = self.font.render(self.text, 1, (0,0,0))
         screen.blit(txt_surface, (self.draw_surface.x+3, self.draw_surface.y+1))
 
+class Chunk:
+    
+    def __init__(self, engine, x, y, tiles):
+        self.engine = engine
+        self.x = x
+        self.y = y
+        self.tiles_list = tiles
+        self.tiles = None
+
+    def setTiles(self, tiles):
+        self.tiles = tiles
+        
+    def organizeTile(self):
+        organizedTile = {}
+        new_tiles = []
+        for tile in self.tiles:
+            if tile.getLayer() in organizedTile.keys():
+                organizedTile[tile.getLayer()].append(tile)
+            else:
+                organizedTile[tile.getLayer()] = [tile]
+        key = 0
+        for i in range(len(organizedTile)):
+            while key not in organizedTile.keys():
+                key = key +1
+            new_tiles = new_tiles + organizedTile[key]
+            key = key + 1
+        return new_tiles
+    
+    def getList(self):
+        return self.tiles_list
+
+    def getTiles(self):
+        tiles_list = self.getList()
+        new_tiles_list = []
+        for tile in tiles_list:
+            tile = tile.split("#")
+            new_tiles_list.append(Tile(self.engine.tiles_name[tile[0]], self.engine.tiles_type[tile[0]], int(tile[3]), int(tile[4]), int(tile[1]), tile[2], tile[5], (int(tile[6]), int(tile[7]), int(tile[8]))))
+        return new_tiles_list
+    
+    def getTilesList(self):
+        return self.tiles_list
+    
+    def addTile(self, tile):   # id#layer#collision#x#y#entity#colkey
+        new_tile = str(self.engine.getId()[tile.texture_path])
+        new_tile = new_tile + "#" + str(tile.layer)
+        new_tile = new_tile + "#" + str(tile.collision)
+        new_tile = new_tile + "#" + str(tile.x)
+        new_tile = new_tile + "#" + str(tile.y)
+        new_tile = new_tile + "#" + str(tile.entity)
+        new_tile = new_tile + "#" + str(tile.colkey[0])
+        new_tile = new_tile + "#" + str(tile.colkey[1])
+        new_tile = new_tile + "#" + str(tile.colkey[2])
+        #detect if tile exist in the same coord and layer
+        detected = False
+        for tile_map in self.tiles:
+            if tile_map.x//16 == tile.x and tile_map.y//16 == tile.y and tile_map.layer == tile.layer:
+                detected = tile_map     
+        if detected is False:
+            self.tiles_list.append(new_tile)
+        else:
+            for tile_map in self.tiles_list:
+                tile_test = tile_map.split("#")
+                tile_test_layer = int(tile_test[1])
+                tile_test_x = int(tile_test[3])
+                tile_test_y = int(tile_test[4])
+                if tile_test_x == tile.x and tile_test_y == tile.y and tile_test_layer == tile.layer:
+                    self.tiles_list.remove(tile_map)
+            self.tiles.remove(detected)
+            self.tiles_list.append(new_tile)
+        self.setTiles(self.getTiles())
+
 class Engine:
 
     def __init__(self, file):
@@ -86,8 +157,8 @@ class Engine:
         self.tiles_type = self.getTilesType(self.files)
         self.tiles_name = self.getTilesName(self.files)
         self.tiles_id = self.getTilesId(self.files)
-        self.tiles_list = self.getTilesList(self.files)
-        self.tiles = None
+        self.chunks_list = self.getChunksList(self.files)
+        self.chunks = self.getChunks(self.files)
 
         self.layer_inputbox = InputBoxNum(131, 62, 20, 20, 1, 15, 2, 1055, 145)
         self.collision_case = Case(200, 65, 1220, 150)
@@ -122,68 +193,6 @@ class Engine:
     def getWidth(self, file):
         return self.files['width']
     
-    def getList(self):
-        return self.tiles_list
-
-    def getTiles(self):
-        tiles_list = self.getList()
-        new_tiles_list = []
-        for tile in tiles_list:
-            tile = tile.split("#")
-            new_tiles_list.append(Tile(self.tiles_name[tile[0]], self.tiles_type[tile[0]], int(tile[3]), int(tile[4]), int(tile[1]), tile[2], tile[5], (int(tile[6]), int(tile[7]), int(tile[8]))))
-        return new_tiles_list
-
-    def getTilesList(self, file = None):
-        if file == None:
-            return self.tiles_list
-        else:
-            return self.files['tiles']
-    
-    def addTile(self, tile, remove_tile = None):   # id#layer#collision#x#y#entity#colkey
-        new_tile = str(self.getId()[tile.texture_path])
-        new_tile = new_tile + "#" + str(tile.layer)
-        new_tile = new_tile + "#" + str(tile.collision)
-        new_tile = new_tile + "#" + str(tile.x)
-        new_tile = new_tile + "#" + str(tile.y)
-        new_tile = new_tile + "#" + str(tile.entity)
-        new_tile = new_tile + "#" + str(tile.colkey[0])
-        new_tile = new_tile + "#" + str(tile.colkey[1])
-        new_tile = new_tile + "#" + str(tile.colkey[2])
-        #detect if tile exist in the same coord and layer
-        detected = False
-        for tile_map in self.tiles:
-            if tile_map.x//16 == tile.x and tile_map.y//16 == tile.y and tile_map.layer == tile.layer:
-                detected = tile_map     
-        if detected is False:
-            self.tiles_list.append(new_tile)
-        else:
-            for tile_map in self.tiles_list:
-                tile_test = tile_map.split("#")
-                tile_test_layer = int(tile_test[1])
-                tile_test_x = int(tile_test[3])
-                tile_test_y = int(tile_test[4])
-                if tile_test_x == tile.x and tile_test_y == tile.y and tile_test_layer == tile.layer:
-                    self.tiles_list.remove(tile_map)
-            self.tiles.remove(detected)
-            self.tiles_list.append(new_tile)
-        self.setTiles(self.getTiles())
-
-    def organizeTile(self):
-        organizedTile = {}
-        new_tiles = []
-        for tile in self.tiles:
-            if tile.getLayer() in organizedTile.keys():
-                organizedTile[tile.getLayer()].append(tile)
-            else:
-                organizedTile[tile.getLayer()] = [tile]
-        key = 0
-        for i in range(len(organizedTile)):
-            while key not in organizedTile.keys():
-                key = key +1
-            new_tiles = new_tiles + organizedTile[key]
-            key = key + 1
-        return new_tiles
-    
     def getTilesType(self, file):
         return self.files['tiles_type']
     
@@ -192,23 +201,53 @@ class Engine:
     
     def getTilesId(self, file):
         return self.files['tiles_id']
+    
+    def getChunksList(self, file = None):
+        if file == None:
+            return self.chunks_list
+        return self.files['chunks']
+    
+    def getChunks(self, file = None):
+        if file != None:
+            chunks = []
+            for chunk in self.getChunksList():
+                chunk_split = chunk.split("#")
+                chunks.append(Chunk(self, int(chunk_split[1]), int(chunk_split[2]), self.getChunksList()[chunk]))
+            return chunks
+        else:
+            return self.chunks
+    
+    def setChunksListbyChunks(self):
+        new_chunks_list = {}
+        for chunk in self.getChunks():
+            if chunk.tiles_list != []:
+                str_chunk = "chunk"
+                str_chunk = str_chunk + "#" + str(chunk.x)
+                str_chunk = str_chunk + "#" + str(chunk.y)
+                new_chunks_list[str_chunk] = chunk.tiles_list
+        self.chunks_list = new_chunks_list
+    
+    def getChunk(self, x, y):
+        for chunk in self.getChunks():
+            if chunk.x == x and chunk.y == y:
+                return chunk
+        
+    def addChunk(self, chunk):
+        self.chunks.append(chunk)
 
-    def setTiles(self, tiles):
-        self.tiles = tiles
-
-def register(file, tiles):
+def register(file, chunks):
     with open(file, 'r') as f:
         old_data = json.load(f)
     new_data = {
         "name": old_data["name"],
         "width": old_data["width"],
         "height": old_data["height"],
-        "tiles": tiles,
+        "chunks": chunks,
         "tiles_type": old_data["tiles_type"],
         "tiles_id": old_data["tiles_id"],
         "tiles_name": old_data["tiles_name"],
     }
-    with open(file, 'w') as f:
+    with open(file, 'w') as f:  
         json.dump(new_data, f, indent = 2)
     return new_data
 
@@ -228,7 +267,7 @@ class Tile:
         else:
             self.x = x
             self.y = y
-        if colkey != (256, 256, 256):
+        if colkey[0] < 256 and colkey[1] < 256 and colkey[2] < 256:
             self.texture.set_colorkey(colkey)
 
     def draw(self, surface):
@@ -278,13 +317,12 @@ def get_type_of_block_by_coords(coords, tiles, selected_layer):
 def test():
     clock = pygame.time.Clock()
     pygame.init()
-    Map = Engine("./test.json")
+    Map = Engine("test.json")
     pygame.display.set_caption(Map.name)
     WINDOW_SIZE = (Map.width+600, Map.height)
     screen = pygame.display.set_mode(WINDOW_SIZE,0,32)
     canvas = pygame.Surface((320,320))
-    editor = pygame.Surface((256,320))    
-    Map.setTiles(Map.getTiles())
+    editor = pygame.Surface((256,320)) 
     police = pygame.font.SysFont("verdana",50)
     parameter_police = pygame.font.SysFont("verdana",35)
     test_print = True
@@ -297,23 +335,28 @@ def test():
     selected_collision = Map.collision_case.value
     selected_entity = Map.is_entity_case.value
     selected_colkey = (Map.colkey_input_r.value, Map.colkey_input_g.value, Map.colkey_input_b.value)
+    chunk_selected = [0, 0]
     
     while True:
-        print(selected_colkey)
         selected_layer = Map.layer_inputbox.value
         selected_collision = Map.collision_case.value
         selected_entity = Map.is_entity_case.value
         selected_colkey = (Map.colkey_input_r.value, Map.colkey_input_g.value, Map.colkey_input_b.value)
+        chunk = Map.getChunk(chunk_selected[0], chunk_selected[1])
+        if chunk == None:
+            chunk = Chunk(Map, chunk_selected[0], chunk_selected[1], [])
+            Map.addChunk(chunk)
+        chunk.setTiles(chunk.getTiles())
         canvas.fill((0,0,0))
         canvas_mouse_coords = convert_mouse_coords_canvas(pygame.mouse.get_pos(), WINDOW_SIZE)
         pressed = pygame.mouse.get_pressed()
         if selected_tile != None and canvas_mouse_coords[0] < 20 and canvas_mouse_coords[1] < 20:
             if pressed[0]:
-                Map.addTile(Tile(selected_tile.name, selected_tile.texture_path, canvas_mouse_coords[0], canvas_mouse_coords[1], selected_layer, selected_collision, selected_entity, selected_colkey))
+                chunk.addTile(Tile(selected_tile.name, selected_tile.texture_path, canvas_mouse_coords[0], canvas_mouse_coords[1], selected_layer, selected_collision, selected_entity, selected_colkey))
             
         #Canvas
-        Map.setTiles(Map.organizeTile())
-        for tile in Map.tiles:
+        chunk.setTiles(chunk.organizeTile())
+        for tile in chunk.tiles:
             tile.draw(canvas)
         canvas_surf = pygame.transform.scale(canvas, (Map.width, Map.height))
         screen.blit(canvas_surf, (0, 0))
@@ -325,6 +368,9 @@ def test():
         collision_text = parameter_police.render("collision", 1 ,(0,0,0))
         entity_text = parameter_police.render("entity", 1 ,(0,0,0))
         colkey_text = parameter_police.render("colkey", 1 ,(0,0,0))
+        chunk_text = parameter_police.render("chunk", 1 ,(0,0,0))
+        selected_x_chunk_text = parameter_police.render("x: " + str(chunk_selected[0]), 1 ,(0,0,0))
+        selected_y_chunk_text = parameter_police.render("y: " + str(chunk_selected[1]), 1 ,(0,0,0))
         page_actuel = 0
         pages = {}
         ligne = 0
@@ -334,7 +380,7 @@ def test():
             if colonne > 5:
                 colonne = 1
                 ligne += 1
-                if ligne > 8:
+                if ligne > 7:
                     ligne = 0
                     page_actuel += 1
             if str(page_actuel) in pages:
@@ -360,8 +406,19 @@ def test():
                 if event.key == K_RIGHT:
                     if str(page_selectionner + 1) in pages:
                         page_selectionner += 1
+                if event.key == K_w:
+                    if chunk_selected[1] > 0:
+                        chunk_selected[1] -= 1
+                if event.key == K_s:
+                    chunk_selected[1] += 1
+                if event.key == K_a:
+                    if chunk_selected[0] > 0:
+                        chunk_selected[0] -= 1
+                if event.key == K_d:
+                    chunk_selected[0] += 1
                 if event.key == K_UP:
-                    data_new = register("./test.json", Map.getTilesList())
+                    Map.setChunksListbyChunks()
+                    data_new = register("test.json", Map.getChunksList())
                     Map.setFile(data_new)
             Map.layer_inputbox.update(event)
             Map.collision_case.update(event)
@@ -379,14 +436,14 @@ def test():
         
         for tile in editor_tiles:
             tile.draw(editor)
-
+        
         Map.layer_inputbox.draw(editor)
         Map.collision_case.draw(editor)
         Map.is_entity_case.draw(editor)
         Map.colkey_input_r.draw(editor)
         Map.colkey_input_g.draw(editor)
         Map.colkey_input_b.draw(editor)
-        
+
         mouse_coords = convert_mouse_coords(pygame.mouse.get_pos(), WINDOW_SIZE)
         cursor_tile_detected = detect_block_at_x_y(mouse_coords, editor_tiles_rect)
         if cursor_tile_detected is not None:
@@ -401,6 +458,9 @@ def test():
         screen.blit(collision_text, (Map.width + 415, 100))
         screen.blit(entity_text, (Map.width + 290, 210))
         screen.blit(colkey_text, (Map.width + 440, 210))
+        screen.blit(chunk_text, (Map.width + 440, 320))
+        screen.blit(selected_x_chunk_text, (Map.width + 400, 360))
+        screen.blit(selected_y_chunk_text, (Map.width + 400, 390))
 
         pygame.display.update() # update display
         clock.tick(60) # maintain 60 fps
