@@ -406,12 +406,12 @@ def test():
                 if event.key == K_RIGHT:
                     if str(page_selectionner + 1) in pages:
                         page_selectionner += 1
-                if event.key == K_w:
+                if event.key == K_z:
                     if chunk_selected[1] > 0:
                         chunk_selected[1] -= 1
                 if event.key == K_s:
                     chunk_selected[1] += 1
-                if event.key == K_a:
+                if event.key == K_q:
                     if chunk_selected[0] > 0:
                         chunk_selected[0] -= 1
                 if event.key == K_d:
