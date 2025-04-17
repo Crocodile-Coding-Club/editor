@@ -19,6 +19,7 @@ class Case:
             self.value = (self.value+1)%2
 
     def draw(self, screen):
+        # j'ai rien compris à ton histoire de coeff du coup pour changer les collisions c'est à la main
         self.box_col = pygame.Rect(self.x_col, self.y_col, 15*(600/256), 15*(600/256))
         self.box_draw = pygame.Rect(self.x, self.y, 15, 15)
         if not self.operated:
