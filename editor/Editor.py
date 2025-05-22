@@ -350,7 +350,7 @@ def test():
         canvas.fill((0,0,0))
         canvas_mouse_coords = convert_mouse_coords_canvas(pygame.mouse.get_pos(), WINDOW_SIZE)
         pressed = pygame.mouse.get_pressed()
-        if selected_tile != None and canvas_mouse_coords[0] < 20 and canvas_mouse_coords[1] < 20:
+        if selected_tile != None and canvas_mouse_coords[0] < 20 and canvas_mouse_coords[1] < 20 and canvas_mouse_coords[0] >= 0 and canvas_mouse_coords[1] >= 0:
             if pressed[0]:
                 chunk.addTile(Tile(selected_tile.name, selected_tile.texture_path, canvas_mouse_coords[0], canvas_mouse_coords[1], selected_layer, selected_collision, selected_entity, selected_colkey))
             
